@@ -145,7 +145,9 @@ void loop() {
       myFile.print(humidity);
       myFile.println(" |");
       myFile.close();
-      read();
+      // WARNING! Printing the file to serial only works as long as the time taken to print the contents is less than 5 seconds. This happens at around ~3 minutes so 
+      // use this only for debugging and disable when testing for long periods!
+      //read();
     }else{
       // if the file didn't open, print an error:
       Serial.println("error opening data.txt");
