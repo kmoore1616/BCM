@@ -11,7 +11,7 @@ z = []
 therm = []
 humidity = []
 
-data_file = open("data.txt", "r")
+data_file = open("C:\\Users\\ewokk\\Documents\\.PP\Python\\balloon\\BCM\\DATA.txt", "r")
 data = data_file.read()
 
 data = data.replace('\n', '').split("|")
