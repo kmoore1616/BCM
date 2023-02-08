@@ -241,8 +241,9 @@ void fileCreationFail(){
       digitalWrite(10, HIGH);
       delay(1000);
       digitalWrite(10, LOW); // SD card error gives one flash
-      delay(3000);
+      delay(1000);
     }
+    delay(3000);
   }
 }
 void accelFail(){
@@ -251,8 +252,9 @@ void accelFail(){
       digitalWrite(10, HIGH);
       delay(1000);
       digitalWrite(10, LOW); 
-      delay(3000);
+      delay(1000);
     }
+    delay(3000);
   }
 }
 
@@ -262,7 +264,8 @@ void fileOpenError(){
       digitalWrite(10, HIGH);
       delay(1000);
       digitalWrite(10, LOW); 
-      delay(3000);
+      delay(1000);
     }
+    delay(3000);
   }
 }
