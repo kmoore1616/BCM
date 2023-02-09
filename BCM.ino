@@ -4,12 +4,14 @@
 #include <SD.h>
 #include "DHT.h"
 #include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
 
 // Pins
 const int chipSelect = 53;
 #define DHTPIN 8
 #define DHTTYPE DHT22
-const int MPU_ADDR = 0x68;
+Adafruit_MPU6050 mpu;
 
 // Library Instantiation 
 File myFile;
@@ -17,34 +19,33 @@ millisDelay clock;
 DHT dht(DHTPIN, DHTTYPE);
 
 // Variables
-int seconds = 0;
+float seconds = 0;
 float time = 0.0;
-
-int16_t accelerometer_x, accelerometer_y, accelerometer_z; // variables for accelerometer raw data
-int16_t gyro_x, gyro_y, gyro_z; // variables for gyro raw data
-int16_t temperature; // variables for temperature data
-char tmp_str[7];
-
-char* convert_int16_to_str(int16_t i) { // converts int16 to string. Moreover, resulting strings will have the same length in the debug monitor.
-  sprintf(tmp_str, "%6d", i);
-  return tmp_str;
-}
-
+// Change to true if readout is needed after every write
+// If left on it will stall the program as the process of printing 
+// will take longer than 5 seconds.
+bool needRead = false;
 
 void setup() {
   // Opens serial communications
-  Serial.begin(9600);
+  Serial.begin(115200);
   // Sets up LEDs
+  pinMode(11, OUTPUT); // Heater Mosfet Switch. High Turns on Heater, Low Turns off
   pinMode(10, OUTPUT); // Red
   pinMode(9, OUTPUT); // Green
 
   // Sets up sensor pins
+  
   dht.begin();
+  
   Wire.begin();
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x6B); 
-  Wire.write(0);
-  Wire.endTransmission(true);
+  if (!mpu.begin()) {
+		Serial.println("Failed to find MPU6050 chip");
+	}
+  
+  // Mpu setup
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
   // Debug stuff to make sure SD card works
   Serial.print("Initializing SD card...");
@@ -132,10 +133,12 @@ void setup() {
   
 }
 void loop() {
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x3B); // starting with register 0x3B (ACCEL_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
-  Wire.endTransmission(false); // the parameter indicates that the Arduino will send a restart. As a result, the connection is kept active.
-  Wire.requestFrom(MPU_ADDR, 7*2, true);
+  sensors_event_t a, g, temp;
+	mpu.getEvent(&a, &g, &temp);
+
+  digitalWrite(11, HIGH);
+  delay(1000);
+  digitalWrite(11, LOW);
   // Clock. Runs 5 seconds.
   if (!clock.isRunning()) {
     clock.start(5000);
@@ -144,25 +147,15 @@ void loop() {
   digitalWrite(12, LOW);
   if (clock.justFinished()) {
     // Every 5 seconds runs in this. All sensor reading will occur here
-    seconds += 5;
-    time = (seconds/60);
+    seconds += 5.00;
+    time = (seconds/60.00);
     Serial.println("");
     // Accelerometer Data Retrival
-    accelerometer_x = Wire.read()<<8 | Wire.read(); // reading registers: 0x3B (ACCEL_XOUT_H) and 0x3C (ACCEL_XOUT_L)
-    accelerometer_y = Wire.read()<<8 | Wire.read(); // reading registers: 0x3D (ACCEL_YOUT_H) and 0x3E (ACCEL_YOUT_L)
-    accelerometer_z = Wire.read()<<8 | Wire.read(); // reading registers: 0x3F (ACCEL_ZOUT_H) and 0x40 (ACCEL_ZOUT_L)
-    temperature = Wire.read()<<8 | Wire.read(); // reading registers: 0x41 (TEMP_OUT_H) and 0x42 (TEMP_OUT_L)
-    String x = convert_int16_to_str(accelerometer_x);
-    String y = convert_int16_to_str(accelerometer_y);
-    String z = convert_int16_to_str(accelerometer_z);
-    String iTemp = convert_int16_to_str(temperature/340.00+36.53);
-
-    x.trim();
-    y.trim();
-    z.trim();
-    iTemp.trim();
+    float accelerometer_x = a.acceleration.x;
+    float accelerometer_y = a.acceleration.y; 
+    float accelerometer_z = a.acceleration.z;
+    float iTemperature = temp.temperature;
     
-
     // Temp & Humidity Data Retrival
     float humidity = dht.readHumidity();
     float temperature = dht.readTemperature(true);
@@ -173,17 +166,21 @@ void loop() {
       myFile.print("|");
       myFile.print(time);
       myFile.print("|");
-      myFile.print(x);
+      myFile.print(accelerometer_x);
       myFile.print("|");
-      myFile.print(y);
+      myFile.print(accelerometer_y);
       myFile.print("|");
-      myFile.print(z);
+      myFile.print(accelerometer_z);
       myFile.print("|");
       myFile.print(temperature);
       myFile.print("|");
       myFile.print(humidity);
-      myFile.println("|");
-      myFile.println(iTemp);
+      myFile.print("|");
+      myFile.print(iTemperature);
+      myFile.print("|");
+      myFile.print(.35);
+      myFile.print("|");
+      myFile.println(1.23);
       myFile.close();
       digitalWrite(9, HIGH);
       delay(100);
@@ -194,7 +191,9 @@ void loop() {
       digitalWrite(9, LOW);
       // WARNING! Printing the file to serial only works as long as the time taken to print the contents is less than 5 seconds. This happens at around ~3 minutes so 
       // use this only for debugging and disable when testing for long periods!
-      read();
+      if(needRead == true){
+        read();
+      }
     }else{
       // if the file didn't open, print an error:
       Serial.println("error opening data.txt");
@@ -241,9 +240,8 @@ void fileCreationFail(){
       digitalWrite(10, HIGH);
       delay(1000);
       digitalWrite(10, LOW); // SD card error gives one flash
-      delay(1000);
+      delay(3000);
     }
-    delay(3000);
   }
 }
 void accelFail(){
@@ -252,9 +250,8 @@ void accelFail(){
       digitalWrite(10, HIGH);
       delay(1000);
       digitalWrite(10, LOW); 
-      delay(1000);
+      delay(3000);
     }
-    delay(3000);
   }
 }
 
@@ -264,8 +261,7 @@ void fileOpenError(){
       digitalWrite(10, HIGH);
       delay(1000);
       digitalWrite(10, LOW); 
-      delay(1000);
+      delay(3000);
     }
-    delay(3000);
   }
 }
