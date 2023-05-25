@@ -5,18 +5,17 @@ import matplotlib.pyplot as plt
 line_on = 0
 word_on = 0
 time = []
-x = []
-y = []
-z = []
-therm = []
-humidity = []
-iTemp = []
-pressure = []
-co2 = []
+acc = []
+Temp = []
+Humidity = []
+mpuTemp = []
+Pressure = []
+Altitude = []
+eCO2 = []
+TVOC = []
 
-data_file = open("C:\\Users\\ewokk\\Documents\\.PP\Python\\balloon\\BCM\\DATA.txt", "r")
+data_file = open("DATA.txt", "r")
 data = data_file.read()
-
 data = data.replace('\n', '').split("|")
 for i in range(10):
     data.pop(0)
@@ -28,59 +27,85 @@ for item in data:
         time.append(float(item))
         word_on+=1
     elif word_on == 1:
-        x.append(float(item))
+        acc.append(float(item))
         word_on+=1
     elif word_on == 2:
-        y.append(float(item))
+        Temp.append(float(item))
         word_on+=1
     elif word_on == 3:
-        z.append(float(item))
+        Humidity.append(float(item))
         word_on+=1
     elif word_on == 4:
-        therm.append(float(item))
+        mpuTemp.append(float(item))
         word_on+=1
     elif word_on == 5:
-        humidity.append(float(item))
+        Pressure.append(float(item))
         word_on += 1
     elif word_on == 6:
-        iTemp.append(float(item))
+        Altitude.append(float(item))
         word_on += 1
     elif word_on == 7:
-        pressure.append(float(item))
+        eCO2.append(float(item))
         word_on += 1
     elif word_on == 8:
-        co2.append(float(item))
+        TVOC.append(float(item))
         word_on = 0
         
 data_file.close()
 
+for data in range(len(time)):
+    time[data] = float(time[data])
+    
+for data in range(len(acc)):
+    acc[data] = float(acc[data])
+    
+for data in range(len(Temp)):
+    Temp[data] = float(Temp[data])
+    
+for data in range(len(Humidity)):
+    Humidity[data] = float(Humidity[data])
+    
+for data in range(len(mpuTemp)):
+    mpuTemp[data] = float(mpuTemp[data])
+
+for data in range(len(Pressure)):
+    Pressure[data] = float(Pressure[data])
+    
+for data in range(len(Altitude)):
+    Altitude[data] = float(Altitude[data])
+    
+for data in range(len(eCO2)):
+    eCO2[data] = float(eCO2[data])
+
+for data in range(len(TVOC)):
+    TVOC[data] = float(TVOC[data])
 
 
 figure, axis = plt.subplots(4, 2)
 
-axis[0,0].plot(time, x)
-axis[0,0].set_title("X Acceleration")
+axis[0,0].plot(time, acc)
+axis[0,0].set_title("Acceleration")
 
-axis[0,1].plot(time,y)
-axis[0,1].set_title("Y Acceleration")
+axis[0,1].plot(time,Temp)
+axis[0,1].set_title("Main Temp")
 
-axis[1,0].plot(time,z)
-axis[1,0].set_title("Z Acceleration")
+axis[1,0].plot(time,Humidity)
+axis[1,0].set_title("Humidity")
 
-axis[1,1].plot(time,therm)
-axis[1,1].plot("Temperature")
+axis[1,1].plot(time,mpuTemp)
+axis[1,1].set_title("Aux Temp")
 
-axis[2,0].plot(time, humidity)
-axis[2,0].set_title("Humidity")
+axis[2,0].plot(time, Pressure)
+axis[2,0].set_title("Pressure")
 
-axis[2,1].plot(time, iTemp)
-axis[2,1].set_title("Internal Temperature")
+axis[2,1].plot(time, Altitude)
+axis[2,1].set_title("Altitude")
 
-axis[3,0].plot(time, pressure)
-axis[3,0].set_title("Pressure")
+axis[3,0].plot(time, eCO2)
+axis[3,0].set_title("eCO2")
 
-axis[3,1].plot(time, co2)
-axis[3,1].set_title("co2")
+axis[3,1].plot(time, TVOC)
+axis[3,1].set_title("TVOC")
 plt.show()
 
 
