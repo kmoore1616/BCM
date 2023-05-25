@@ -3,14 +3,10 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Wire.h>
-#include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
 #include "Adafruit_SGP30.h"
 
-const int chipSelect = 4;
-
-Adafruit_MPU6050 mpu; 
 Adafruit_SGP30 sgp;
 Adafruit_BME680 bme; 
 File myFile;
@@ -34,7 +30,7 @@ unsigned long mills;
 // If left on it will stall the program as the process of printing 
 // will take longer than 5 seconds.
 bool needRead = true;
-bool mpuIsPresent = false;
+
 
 void setup() {
   // Opens serial communications
@@ -46,7 +42,7 @@ void setup() {
 
  if (!bme.begin()) {
    Serial.println("Could not find a valid BME680 sensor, check wiring!");
-   bmeFail();
+  //  bmeFail();
  }
 
 
@@ -66,14 +62,6 @@ void setup() {
   Serial.print(sgp.serialnumber[1], HEX);
   Serial.println(sgp.serialnumber[2], HEX);
   
-  // if (!mpu.begin()) {
-	// 	Serial.println("Failed to find MPU6050 chip");
-	// }
-  
-  // Mpu setup
-  // mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  // mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-
 
 
   // Debug stuff to make sure SD card works
@@ -144,8 +132,11 @@ void setup() {
     return;
     
   }
-
-  for(int x=0; x<25; x++){
+  uint16_t TVOC_base, eCO2_base;
+  if (! sgp.getIAQBaseline(&eCO2_base, &TVOC_base)) {
+    Serial.println("Failed to get baseline readings");
+  }
+  for(int x=0; x<30; x++){
     if (! sgp.IAQmeasure()) {
       Serial.println("Measurement failed");
       return;
@@ -161,7 +152,6 @@ void setup() {
 int counter = 0;
 void loop() {
   sensors_event_t a, g, temp;
-	mpu.getEvent(&a, &g, &temp);
 
   if (! sgp.IAQmeasure()) {
     Serial.println("Measurement failed");
@@ -183,16 +173,11 @@ void loop() {
     // Every 5 seconds runs in this. All sensor reading will occur here
 
     mills = (millis());
-    seconds = (mills/1000)-30;
+    seconds = (mills/1000)-33;
     time = seconds/60;
     Serial.println("");
     // Data Retrival
-    if (mpuIsPresent){
-      float accelerometer_x = a.acceleration.x;  // Which one is up?
-      float accelerometer_y = a.acceleration.y; 
-      float accelerometer_z = a.acceleration.z;
-      float mpuTemperature = temp.temperature;   
-    } 
+    
     float mainTemperature = bme.temperature;
     float pressure = bme.pressure / 100;
     float bmeHumidity = bme.humidity;
@@ -208,13 +193,9 @@ void loop() {
       myFile.print("|");
       myFile.print(time);
       myFile.print("|");
-      myFile.print(69); // Acceleration
-      myFile.print("|");
       myFile.print(mainTemperature);
       myFile.print("|");
       myFile.print(bmeHumidity);
-      myFile.print("|");
-      myFile.print(420);
       myFile.print("|");
       myFile.print(pressure);
       myFile.print("|");
