@@ -33,7 +33,7 @@ unsigned long mills;
 // Change to true if readout is needed after every write
 // If left on it will stall the program as the process of printing 
 // will take longer than 5 seconds.
-bool needRead = false;
+bool needRead = true;
 bool mpuIsPresent = false;
 
 void setup() {
@@ -144,6 +144,17 @@ void setup() {
     return;
     
   }
+
+  for(int x=0; x<25; x++){
+    if (! sgp.IAQmeasure()) {
+      Serial.println("Measurement failed");
+      return;
+    }
+    float eCO2_x = sgp.eCO2;
+    float TVOC_x = sgp.TVOC;
+    Serial.println(eCO2_x);
+    delay(1000);
+  }
   
 }
 
@@ -172,7 +183,7 @@ void loop() {
     // Every 5 seconds runs in this. All sensor reading will occur here
 
     mills = (millis());
-    seconds = mills/1000;
+    seconds = (mills/1000)-30;
     time = seconds/60;
     Serial.println("");
     // Data Retrival
