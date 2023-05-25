@@ -5,10 +5,8 @@ import matplotlib.pyplot as plt
 line_on = 0
 word_on = 0
 time = []
-acc = []
 Temp = []
 Humidity = []
-mpuTemp = []
 Pressure = []
 Altitude = []
 eCO2 = []
@@ -27,7 +25,7 @@ for item in data:
         time.append(float(item))
         word_on+=1
     elif word_on == 1:
-        acc.append(float(item))
+        
         word_on+=1
     elif word_on == 2:
         Temp.append(float(item))
@@ -36,7 +34,7 @@ for item in data:
         Humidity.append(float(item))
         word_on+=1
     elif word_on == 4:
-        mpuTemp.append(float(item))
+        
         word_on+=1
     elif word_on == 5:
         Pressure.append(float(item))
@@ -55,9 +53,7 @@ data_file.close()
 
 for data in range(len(time)):
     time[data] = float(time[data])
-    
-for data in range(len(acc)):
-    acc[data] = float(acc[data])
+
     
 for data in range(len(Temp)):
     Temp[data] = float(Temp[data])
@@ -65,8 +61,7 @@ for data in range(len(Temp)):
 for data in range(len(Humidity)):
     Humidity[data] = float(Humidity[data])
     
-for data in range(len(mpuTemp)):
-    mpuTemp[data] = float(mpuTemp[data])
+
 
 for data in range(len(Pressure)):
     Pressure[data] = float(Pressure[data])
@@ -83,29 +78,24 @@ for data in range(len(TVOC)):
 
 figure, axis = plt.subplots(4, 2)
 
-axis[0,0].plot(time, acc)
-axis[0,0].set_title("Acceleration")
 
-axis[0,1].plot(time,Temp)
-axis[0,1].set_title("Main Temp")
+axis[0,0].plot(time,Temp)
+axis[0,0].set_title("Main Temp")
 
-axis[1,0].plot(time,Humidity)
-axis[1,0].set_title("Humidity")
+axis[0,1].plot(time,Humidity)
+axis[0,1].set_title("Humidity")
 
-axis[1,1].plot(time,mpuTemp)
-axis[1,1].set_title("Aux Temp")
+axis[1,0].plot(time, Pressure)
+axis[1,0].set_title("Pressure")
 
-axis[2,0].plot(time, Pressure)
-axis[2,0].set_title("Pressure")
+axis[2,0].plot(time, Altitude)
+axis[2,0].set_title("Altitude")
 
-axis[2,1].plot(time, Altitude)
-axis[2,1].set_title("Altitude")
+axis[2,1].plot(time, eCO2)
+axis[2,1].set_title("eCO2")
 
-axis[3,0].plot(time, eCO2)
-axis[3,0].set_title("eCO2")
-
-axis[3,1].plot(time, TVOC)
-axis[3,1].set_title("TVOC")
+axis[3,0].plot(time, TVOC)
+axis[3,0].set_title("TVOC")
 plt.show()
 
 
